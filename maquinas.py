@@ -1,16 +1,25 @@
 import random
 import simpy
 
+# REVISAR SI LA MAQUINA ES UN NUMERO != 0 PARA SABER QUE HAY UNA MAQUINA AHI, EN EL CASO QUE SEA 0, SE SABE QUE NO HAY MAQUINA
+# CREAR UN ARREGLO CON NÚMEROS DE LOS LUGARES VACIOS
+
 tab = "             "
+
 maquinasEnFabrica = []
 maquinasDeRepuesto = []
-cantidad = 50
+
+cantidad = 8
 reparadores = 3
+tiempo = 
 
 
 def maquinasEnFuncionamiento(env, counter, cantidadFab, cantidadRep):
     for i in range(cantidadFab):
-        maquinasEnFabrica.append('Maquina%02d' % i)
+        maquinasEnFabrica.append(i+1)
+
+    for i in range(cantidadRep):
+        maquinasDeRepuesto.append(i+1)
 
     for i in range(len(maquinasEnFabrica)):
         duracionArreglo = random.randrange(5, 11)
@@ -23,7 +32,7 @@ def repair(env, name, counter, time_in_repair):
     arrive = env.now
 
     while True:
-    
+        
         duracionMaquina = random.randrange(130, 190)
         print('%10.0f %s %s: Funcionando ' % (arrive, tab, name))
         yield env.timeout(duracionMaquina)
