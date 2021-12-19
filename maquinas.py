@@ -8,10 +8,12 @@ tab = "             "
 
 maquinasEnFabrica = []
 maquinasDeRepuesto = []
+espaciosVacios = []
 
-cantidad = 8
+cantidadMaq = 8
+cantidadRep = 3
 reparadores = 3
-tiempo = 
+tiempo = 360
 
 
 def maquinasEnFuncionamiento(env, counter, cantidadFab, cantidadRep):
@@ -19,7 +21,7 @@ def maquinasEnFuncionamiento(env, counter, cantidadFab, cantidadRep):
         maquinasEnFabrica.append(i+1)
 
     for i in range(cantidadRep):
-        maquinasDeRepuesto.append(i+1)
+        maquinasDeRepuesto.append("Repuesto%02d" % i)
 
     for i in range(len(maquinasEnFabrica)):
         duracionArreglo = random.randrange(5, 11)
@@ -33,26 +35,29 @@ def repair(env, name, counter, time_in_repair):
 
     while True:
         
-        duracionMaquina = random.randrange(130, 190)
+        duracionMaquina = random.randrange(130, 190)    # Genera un número al azar para simular el tiempo de funcionamiento de la máquina
         print('%10.0f %s %s: Funcionando ' % (arrive, tab, name))
         yield env.timeout(duracionMaquina)
 
         arrive = env.now
         print('%10.0f %s %s: Se dañó máquina ' % (arrive, tab, name))
+        espaciosVacios.append(name)     # Agrega el indice del espacios vacío que dejó la máquina que se acaba de dañar
 
         with counter.request() as req:
-            # Wait for the counter or abort at the end of our tether
             results = yield req
 
             wait = env.now - arrive
+
+            print("%s %s" % (tab, espaciosVacios))
 
             # We got to the counter
             print('%10.0f %s %s esperó en cola de reparación %1.0f horas' % (env.now, tab, name, wait))
 
             print('%10.0f %s %s: Me están arreglando' % (env.now, tab, name))
-
             yield env.timeout(time_in_repair)
+
             print('%10.0f %s %s: Terminaron de arreglarme' % (env.now, tab, name))
+            espaciosVacios.pop(0) # Saca el primer indice de los espacios vacíos para simular que la máquina vuelve a ese espacios
 
             arrive = env.now
 
@@ -68,5 +73,5 @@ env = simpy.Environment()
 
 # Start processes and run
 counter = simpy.Resource(env, capacity = reparadores)
-env.process(maquinasEnFuncionamiento(env, counter, cantidad, 0))
-env.run(until = 360)
+env.process(maquinasEnFuncionamiento(env, counter, cantidadMaq, cantidadRep))
+env.run(until = tiempo)
