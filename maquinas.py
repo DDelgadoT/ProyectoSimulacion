@@ -26,13 +26,13 @@ for i in range(cantidadMaq):
 for i in range(cantidadRep):
     maquinasDeRepuesto.append("Repuesto%02d" % i)
 
-def maquinasEnFuncionamiento(env, counter):
+def maquinasEnFuncionamiento(env, repairman):
 
     global maquinasFuncionando
     
     while len(maquinasEnFabrica) != 0:
         duracionArreglo = random.uniform(5, 11)
-        c = repair(env, maquinasEnFabrica[0], counter, duracionArreglo)
+        c = repair(env, maquinasEnFabrica[0], repairman, duracionArreglo)
         env.process(c)
         
         maquinasFuncionando += 1
@@ -40,7 +40,7 @@ def maquinasEnFuncionamiento(env, counter):
         maquinasEnFabrica.pop(0)
 
 
-def repair(env, name, counter, time_in_repair):
+def repair(env, name, repairman, time_in_repair):
 
     arrive = env.now
     global maquinasFuncionando
@@ -66,7 +66,7 @@ def repair(env, name, counter, time_in_repair):
 
     # SIMULA CUANDO UNA MAQUINA SE DAÑA
     #print('%10.0f %s %s: Se dañó máquina ' % (arrive, tab, name))
-    maquinasDañadas.append(name)     # AGREGA LA MAQUINA A LA LISTA DE MAQUINAS DAÑADASAgrega la máquina que se acaba de dañar
+    maquinasDañadas.append(name) # AGREGA LA MAQUINA A LA LISTA DE MAQUINAS DAÑADAS
     maquinasFuncionando -= 1
 
     """print()
@@ -82,7 +82,7 @@ def repair(env, name, counter, time_in_repair):
     if len(maquinasDeRepuesto) != 0 and maquinasFuncionando != cantidadMaq:
         maquinasEnFabrica.append(maquinasDeRepuesto.pop(0))
         duracionArreglo = random.uniform(5, 11)
-        c = repair(env, maquinasEnFabrica.pop(0), counter, duracionArreglo)
+        c = repair(env, maquinasEnFabrica.pop(0), repairman, duracionArreglo)
         env.process(c)
         yield env.timeout(0)
         maquinasFuncionando += 1
@@ -92,7 +92,7 @@ def repair(env, name, counter, time_in_repair):
                 print("Máquinas que deben estar en la fábrica: %s" % cantidadMaq)
                 print()"""
 
-    with counter.request() as req:
+    with repairman.request() as req:
         results = yield req
 
         wait = env.now - arrive
@@ -101,23 +101,24 @@ def repair(env, name, counter, time_in_repair):
                                 print("%s Maquinas en zona de reparación: %s" % (tab, maquinasDañadas))
                                 print()"""
 
-        # We got to the repair zone
+        # ZONA DE REPARACIÓN
         #print('%10.0f %s %s esperó en cola de reparación %1.0f horas' % (env.now, tab, name, wait))
 
         #print('%10.0f %s %s: Me están arreglando' % (env.now, tab, name))
         yield env.timeout(time_in_repair)
 
         #print('%10.0f %s %s: Terminaron de arreglarme' % (env.now, tab, name))
-        maquinasDañadas.pop(0) # Saca la máquina de la cola de máquinas en la sala de reparación
+        maquinasDañadas.pop(0) # SACA LA MÁQUINA DE LA COLA DE MÁQUINAS EN LA SALA DE REPARACIÓN
 
         arrive = env.now
 
         if len(maquinasDeRepuesto) == 0 and maquinasFuncionando != cantidadMaq:
             maquinasEnFabrica.append(name)
             duracionArreglo = random.uniform(5, 11)
-            c = repair(env, maquinasEnFabrica.pop(0), counter, duracionArreglo)
+            c = repair(env, maquinasEnFabrica.pop(0), repairman, duracionArreglo)
             maquinasFuncionando += 1
 
+            # MIRA CUÁNDO DESPUÉS DE QUE SE FORMA UN "HUECO", VUELVEN A HABER 50 MAQUINAS FUNCIONANDO
             if maquinasFuncionando == cantidadMaq and tiempoDesdeVacio != 0:
                 tiempoSinAlgunaMaquina += round(arrive, 0) - round(tiempoDesdeVacio, 0)
                 tiempoDesdeVacio = 0
@@ -138,8 +139,8 @@ print()"""
 env = simpy.Environment()
 
 # Start processes and run
-counter = simpy.Resource(env, capacity = reparadores)
-env.process(maquinasEnFuncionamiento(env, counter))
+repairman = simpy.Resource(env, capacity = reparadores)
+env.process(maquinasEnFuncionamiento(env, repairman))
 env.run(until = tiempo)
 
 print()
@@ -158,8 +159,8 @@ def correrSim():
 
 for i in range(pruebas):
     env = simpy.Environment()
-    counter = simpy.Resource(env, capacity = reparadores)
-    env.process(maquinasEnFuncionamiento(env, counter))
+    repairman = simpy.Resource(env, capacity = reparadores)
+    env.process(maquinasEnFuncionamiento(env, repairman))
     env.run(until = tiempo)
     print(tiempoSinAlgunaMaquina)
     porcentajeConVacio = (tiempoSinAlgunaMaquina / tiempo) * 100
