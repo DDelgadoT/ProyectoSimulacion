@@ -147,7 +147,7 @@ print()
 print("Horas con menos de %d máquinas funcionando: %d" % (maquinasFuncionando, tiempoSinAlgunaMaquina))
 porcentajeConVacio = (tiempoSinAlgunaMaquina / tiempo) * 100
 capacidad = 100 - porcentajeConVacio
-mensajeCap = "Es decir que la capacidad de producción fue deñ %d" % (round(capacidad, 2))
+mensajeCap = "Es decir que la capacidad de producción fue del %d" % (round(capacidad, 2))
 print(mensajeCap + "%")
 print()
 
